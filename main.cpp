@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <limits>
 using namespace std;
 
 const int MAX_APPLIANCES = 100;
@@ -10,6 +11,63 @@ struct Appliance {
     double watts;
     double hours;
 };
+
+void clearBadInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+int readInt(const string &prompt) {
+    while (true) {
+        cout << prompt;
+        int x;
+        if (cin >> x) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return x;
+        }
+        cout << "Invalid number. Try again.\n";
+        clearBadInput();
+    }
+}
+
+double readDouble(const string &prompt) {
+    while (true) {
+        cout << prompt;
+        double x;
+        if (cin >> x) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return x;
+        }
+        cout << "Invalid number. Try again.\n";
+        clearBadInput();
+    }
+}
+
+string readNonEmptyLine(const string &prompt) {
+    while (true) {
+        cout << prompt;
+        string s;
+        getline(cin, s);
+        if (s.size() > 0) return s;
+        cout << "Name must not be empty. Try again.\n";
+    }
+}
+
+double readPositiveDouble(const string &prompt) {
+    while (true) {
+        double v = readDouble(prompt);
+        if (v > 0) return v;
+        cout << "Value must be greater than 0.\n";
+    }
+}
+
+double readHours(const string &prompt) {
+    while (true) {
+        double h = readDouble(prompt);
+        if (h >= 0 && h <= 24) return h;
+        cout << "Hours must be between 0 and 24.\n";
+    }
+}
 
 void showMenu() {
     cout << "\n========== ELECTRICAL LOAD MONITOR ==========\n";
@@ -24,24 +82,18 @@ void showMenu() {
 
 void registerAppliance(Appliance arr[], int &count) {
     if (count >= MAX_APPLIANCES) {
-        cout << "Storage full. Cannot add more appliances.\n";
+        cout << "Storage full.\n";
         return;
     }
 
     Appliance a;
-    cout << "Enter appliance name: ";
-    cin.ignore();
-    getline(cin, a.name);
-
-    cout << "Enter power rating (watts): ";
-    cin >> a.watts;
-
-    cout << "Enter daily usage hours: ";
-    cin >> a.hours;
+    a.name  = readNonEmptyLine("Enter appliance name: ");
+    a.watts = readPositiveDouble("Enter power rating (watts > 0): ");
+    a.hours = readHours("Enter daily usage hours (0-24): ");
 
     arr[count] = a;
     count++;
-    cout << "Appliance added (not saved to file yet).\n";
+    cout << "Appliance added.\n";
 }
 
 void viewAppliances(Appliance arr[], int count) {
@@ -54,7 +106,6 @@ void viewAppliances(Appliance arr[], int count) {
          << setw(25) << "Name"
          << setw(12) << "Watts"
          << setw(12) << "Hours/day" << "\n";
-
     cout << "-------------------------------------------------\n";
 
     for (int i = 0; i < count; i++) {
@@ -73,9 +124,7 @@ int main() {
 
     while (true) {
         showMenu();
-        int choice;
-        cout << "Choose (1-6): ";
-        cin >> choice;
+        int choice = readInt("Choose (1-6): ");
 
         switch (choice) {
             case 1: registerAppliance(appliances, count); break;
