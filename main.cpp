@@ -72,6 +72,14 @@ double readHours(const string &prompt) {
     }
 }
 
+string toLowerSimple(string s) {
+    for (int i = 0; i < (int)s.size(); i++) {
+        char c = s[i];
+        if (c >= 'A' && c <= 'Z') s[i] = char(c - 'A' + 'a');
+    }
+    return s;
+}
+
 bool saveAppliances(const Appliance arr[], int count) {
     ofstream fout(APPLIANCES_FILE.c_str());
     if (!fout.is_open()) return false;
@@ -134,6 +142,7 @@ void registerAppliance(Appliance arr[], int &count) {
         cout << "Storage full.\n";
         return;
     }
+
     Appliance a;
     a.name  = readNonEmptyLine("Enter appliance name: ");
     a.watts = readPositiveDouble("Enter power rating (watts > 0): ");
@@ -166,6 +175,28 @@ void viewAppliances(const Appliance arr[], int count) {
     }
 }
 
+void searchAppliance(const Appliance arr[], int count) {
+    if (count == 0) {
+        cout << "No appliances registered.\n";
+        return;
+    }
+
+    string query = readNonEmptyLine("Enter name to search: ");
+    query = toLowerSimple(query);
+
+    bool found = false;
+    for (int i = 0; i < count; i++) {
+        string nameLower = toLowerSimple(arr[i].name);
+        if (nameLower.find(query) != string::npos) {
+            if (!found) cout << "Matches:\n";
+            cout << "- " << arr[i].name << " (" << arr[i].watts << "W, " << arr[i].hours << " hrs/day)\n";
+            found = true;
+        }
+    }
+
+    if (!found) cout << "No appliance found.\n";
+}
+
 int main() {
     Appliance appliances[MAX_APPLIANCES];
     int count = 0;
@@ -181,8 +212,8 @@ int main() {
         switch (choice) {
             case 1: registerAppliance(appliances, count); break;
             case 2: viewAppliances(appliances, count); break;
-            case 3: cout << "Search appliance (coming soon)\n"; break;
-            case 4: cout << "Billing (coming soon)\n"; break;
+            case 3: searchAppliance(appliances, count); break;
+            case 4: cout << "Billing (coming in later parts)\n"; break;
             case 5:
                 if (saveAppliances(appliances, count)) cout << "Saved.\n";
                 else cout << "Failed to save.\n";
