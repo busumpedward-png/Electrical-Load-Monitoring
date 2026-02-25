@@ -80,6 +80,17 @@ string toLowerSimple(string s) {
     return s;
 }
 
+double applianceKwh(const Appliance &a) {
+    // kWh = (Watts / 1000) * Hours
+    return (a.watts / 1000.0) * a.hours;
+}
+
+double totalKwh(const Appliance arr[], int count) {
+    double total = 0;
+    for (int i = 0; i < count; i++) total += applianceKwh(arr[i]);
+    return total;
+}
+
 bool saveAppliances(const Appliance arr[], int count) {
     ofstream fout(APPLIANCES_FILE.c_str());
     if (!fout.is_open()) return false;
@@ -129,7 +140,7 @@ bool loadAppliances(Appliance arr[], int &count) {
 void showMenu() {
     cout << "\n========== ELECTRICAL LOAD MONITOR ==========\n";
     cout << "1. Register appliance\n";
-    cout << "2. View appliances\n";
+    cout << "2. View appliances + kWh\n";
     cout << "3. Search appliance\n";
     cout << "4. Billing\n";
     cout << "5. Save appliances\n";
@@ -164,15 +175,21 @@ void viewAppliances(const Appliance arr[], int count) {
     cout << left << setw(4) << "#"
          << setw(25) << "Name"
          << setw(12) << "Watts"
-         << setw(12) << "Hours/day" << "\n";
-    cout << "-------------------------------------------------\n";
+         << setw(12) << "Hours/day"
+         << setw(12) << "kWh/day" << "\n";
+    cout << "---------------------------------------------------------------\n";
 
+    cout << fixed << setprecision(2);
     for (int i = 0; i < count; i++) {
         cout << left << setw(4) << (i + 1)
              << setw(25) << arr[i].name
              << setw(12) << arr[i].watts
-             << setw(12) << arr[i].hours << "\n";
+             << setw(12) << arr[i].hours
+             << setw(12) << applianceKwh(arr[i]) << "\n";
     }
+
+    cout << "---------------------------------------------------------------\n";
+    cout << "TOTAL DAILY ENERGY: " << totalKwh(arr, count) << " kWh\n";
 }
 
 void searchAppliance(const Appliance arr[], int count) {
@@ -185,11 +202,16 @@ void searchAppliance(const Appliance arr[], int count) {
     query = toLowerSimple(query);
 
     bool found = false;
+    cout << fixed << setprecision(2);
+
     for (int i = 0; i < count; i++) {
         string nameLower = toLowerSimple(arr[i].name);
         if (nameLower.find(query) != string::npos) {
             if (!found) cout << "Matches:\n";
-            cout << "- " << arr[i].name << " (" << arr[i].watts << "W, " << arr[i].hours << " hrs/day)\n";
+            cout << "- " << arr[i].name
+                 << " | " << arr[i].watts << "W"
+                 << " | " << arr[i].hours << " hrs/day"
+                 << " | " << applianceKwh(arr[i]) << " kWh/day\n";
             found = true;
         }
     }
@@ -213,7 +235,7 @@ int main() {
             case 1: registerAppliance(appliances, count); break;
             case 2: viewAppliances(appliances, count); break;
             case 3: searchAppliance(appliances, count); break;
-            case 4: cout << "Billing (coming in later parts)\n"; break;
+            case 4: cout << "Billing (coming in Part 7)\n"; break;
             case 5:
                 if (saveAppliances(appliances, count)) cout << "Saved.\n";
                 else cout << "Failed to save.\n";
