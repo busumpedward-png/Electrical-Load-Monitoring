@@ -142,7 +142,7 @@ void showMenu() {
     cout << "1. Register appliance\n";
     cout << "2. View appliances + kWh\n";
     cout << "3. Search appliance\n";
-    cout << "4. Billing (and optional save)\n";
+    cout << "4. Billing (detailed + save option)\n";
     cout << "5. Save appliances\n";
     cout << "6. Exit\n";
     cout << "===========================================\n";
@@ -219,49 +219,102 @@ void searchAppliance(const Appliance arr[], int count) {
     if (!found) cout << "No appliance found.\n";
 }
 
-void saveBillingSummary(double tariff, double totalEnergy, double cost, int count) {
+void saveDetailedBillingToFile(const Appliance arr[], int count,
+                               double tariff, double dailyEnergy, double dailyCost,
+                               double monthlyEnergy, double monthlyCost) {
     ofstream fout(BILLING_FILE.c_str(), ios::app);
     if (!fout.is_open()) {
         cout << "Could not open billing_summary.txt\n";
         return;
     }
 
-    fout << "================ BILLING SUMMARY ================\n";
+    fout << "================ DETAILED BILLING SUMMARY ================\n";
     fout << fixed << setprecision(2);
-    fout << "Appliances count: " << count << "\n";
     fout << "Tariff per kWh: " << tariff << "\n";
-    fout << "Total daily energy (kWh): " << totalEnergy << "\n";
-    fout << "Total daily cost: " << cost << "\n";
-    fout << "=================================================\n\n";
+    fout << "Appliances count: " << count << "\n\n";
+
+    fout << left << setw(25) << "Name"
+         << setw(10) << "Watts"
+         << setw(10) << "Hours"
+         << setw(12) << "kWh/day"
+         << setw(12) << "Cost/day" << "\n";
+    fout << "----------------------------------------------------------\n";
+
+    for (int i = 0; i < count; i++) {
+        double kwh = applianceKwh(arr[i]);
+        double cost = kwh * tariff;
+
+        fout << left << setw(25) << arr[i].name
+             << setw(10) << arr[i].watts
+             << setw(10) << arr[i].hours
+             << setw(12) << kwh
+             << setw(12) << cost << "\n";
+    }
+
+    fout << "----------------------------------------------------------\n";
+    fout << "TOTAL DAILY ENERGY: " << dailyEnergy << " kWh\n";
+    fout << "TOTAL DAILY COST:   " << dailyCost << "\n";
+    fout << "30-DAY ENERGY EST:  " << monthlyEnergy << " kWh\n";
+    fout << "30-DAY COST EST:    " << monthlyCost << "\n";
+    fout << "==========================================================\n\n";
 
     fout.close();
 }
 
-void billing(const Appliance arr[], int count) {
+void billingDetailed(const Appliance arr[], int count) {
     if (count == 0) {
         cout << "No appliances registered. Register appliances first.\n";
         return;
     }
 
     double tariff = readPositiveDouble("Enter tariff per kWh (positive): ");
-    double totalEnergy = totalKwh(arr, count);
-    double cost = totalEnergy * tariff;
+
+    double dailyEnergy = totalKwh(arr, count);
+    double dailyCost = dailyEnergy * tariff;
+
+    double monthlyEnergy = dailyEnergy * 30.0;
+    double monthlyCost = dailyCost * 30.0;
 
     cout << fixed << setprecision(2);
-    cout << "\n========== BILLING SUMMARY ==========\n";
-    cout << "Tariff per kWh: " << tariff << "\n";
-    cout << "Total daily energy: " << totalEnergy << " kWh\n";
-    cout << "Total daily cost:  " << cost << "\n";
-    cout << "=====================================\n";
 
-    cout << "Save billing summary to billing_summary.txt? (y/n): ";
+    cout << "\n================ DETAILED BILLING =================\n";
+    cout << "Tariff per kWh: " << tariff << "\n\n";
+
+    cout << left << setw(4)  << "#"
+         << setw(25) << "Name"
+         << setw(10) << "Watts"
+         << setw(10) << "Hours"
+         << setw(12) << "kWh/day"
+         << setw(12) << "Cost/day" << "\n";
+    cout << "----------------------------------------------------\n";
+
+    for (int i = 0; i < count; i++) {
+        double kwh = applianceKwh(arr[i]);
+        double cost = kwh * tariff;
+
+        cout << left << setw(4)  << (i + 1)
+             << setw(25) << arr[i].name
+             << setw(10) << arr[i].watts
+             << setw(10) << arr[i].hours
+             << setw(12) << kwh
+             << setw(12) << cost << "\n";
+    }
+
+    cout << "----------------------------------------------------\n";
+    cout << "TOTAL DAILY ENERGY: " << dailyEnergy << " kWh\n";
+    cout << "TOTAL DAILY COST:   " << dailyCost << "\n";
+    cout << "30-DAY ENERGY EST:  " << monthlyEnergy << " kWh\n";
+    cout << "30-DAY COST EST:    " << monthlyCost << "\n";
+    cout << "====================================================\n";
+
+    cout << "Save this detailed billing to billing_summary.txt? (y/n): ";
     char ch;
     cin >> ch;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     if (ch == 'y' || ch == 'Y') {
-        saveBillingSummary(tariff, totalEnergy, cost, count);
-        cout << "Billing summary saved.\n";
+        saveDetailedBillingToFile(arr, count, tariff, dailyEnergy, dailyCost, monthlyEnergy, monthlyCost);
+        cout << "Detailed billing saved.\n";
     } else {
         cout << "Not saved.\n";
     }
@@ -283,7 +336,7 @@ int main() {
             case 1: registerAppliance(appliances, count); break;
             case 2: viewAppliances(appliances, count); break;
             case 3: searchAppliance(appliances, count); break;
-            case 4: billing(appliances, count); break;
+            case 4: billingDetailed(appliances, count); break;
             case 5:
                 if (saveAppliances(appliances, count)) cout << "Saved.\n";
                 else cout << "Failed to save.\n";

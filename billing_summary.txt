@@ -1,0 +1,15 @@
+================ DETAILED BILLING SUMMARY ================
+Tariff per kWh: 0.70
+Appliances count: 2
+
+Name                     Watts     Hours     kWh/day     Cost/day    
+----------------------------------------------------------
+Television               200.00    6.00      1.20        0.84        
+Blender                  300.00    2.00      0.60        0.42        
+----------------------------------------------------------
+TOTAL DAILY ENERGY: 1.80 kWh
+TOTAL DAILY COST:   1.26
+30-DAY ENERGY EST:  54.00 kWh
+30-DAY COST EST:    37.80
+==========================================================
+

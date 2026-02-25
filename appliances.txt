@@ -1,0 +1,2 @@
+Television|200|6
+Blender|300|2
