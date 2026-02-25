@@ -81,7 +81,6 @@ string toLowerSimple(string s) {
 }
 
 double applianceKwh(const Appliance &a) {
-    // kWh = (Watts / 1000) * Hours
     return (a.watts / 1000.0) * a.hours;
 }
 
@@ -142,7 +141,7 @@ void showMenu() {
     cout << "1. Register appliance\n";
     cout << "2. View appliances + kWh\n";
     cout << "3. Search appliance\n";
-    cout << "4. Billing\n";
+    cout << "4. Billing (tariff + total cost)\n";
     cout << "5. Save appliances\n";
     cout << "6. Exit\n";
     cout << "===========================================\n";
@@ -219,6 +218,25 @@ void searchAppliance(const Appliance arr[], int count) {
     if (!found) cout << "No appliance found.\n";
 }
 
+void billing(const Appliance arr[], int count) {
+    if (count == 0) {
+        cout << "No appliances registered. Register appliances first.\n";
+        return;
+    }
+
+    double tariff = readPositiveDouble("Enter tariff per kWh (positive): ");
+
+    double total = totalKwh(arr, count);
+    double cost = total * tariff;
+
+    cout << fixed << setprecision(2);
+    cout << "\n========== BILLING SUMMARY ==========\n";
+    cout << "Tariff: " << tariff << " per kWh\n";
+    cout << "Total daily energy: " << total << " kWh\n";
+    cout << "Total daily cost:  " << cost << "\n";
+    cout << "=====================================\n";
+}
+
 int main() {
     Appliance appliances[MAX_APPLIANCES];
     int count = 0;
@@ -235,7 +253,7 @@ int main() {
             case 1: registerAppliance(appliances, count); break;
             case 2: viewAppliances(appliances, count); break;
             case 3: searchAppliance(appliances, count); break;
-            case 4: cout << "Billing (coming in Part 7)\n"; break;
+            case 4: billing(appliances, count); break;
             case 5:
                 if (saveAppliances(appliances, count)) cout << "Saved.\n";
                 else cout << "Failed to save.\n";
@@ -244,7 +262,9 @@ int main() {
                 saveAppliances(appliances, count);
                 cout << "Goodbye!\n";
                 return 0;
-            default: cout << "Invalid choice.\n"; break;
+            default:
+                cout << "Invalid choice.\n";
+                break;
         }
     }
 }
