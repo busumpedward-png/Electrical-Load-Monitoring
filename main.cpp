@@ -1,10 +1,13 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <iomanip>
 #include <limits>
 using namespace std;
 
 const int MAX_APPLIANCES = 100;
+const string APPLIANCES_FILE = "appliances.txt";
 
 struct Appliance {
     string name;
@@ -69,6 +72,52 @@ double readHours(const string &prompt) {
     }
 }
 
+bool saveAppliances(const Appliance arr[], int count) {
+    ofstream fout(APPLIANCES_FILE.c_str());
+    if (!fout.is_open()) return false;
+
+    for (int i = 0; i < count; i++) {
+        fout << arr[i].name << "|" << arr[i].watts << "|" << arr[i].hours << "\n";
+    }
+    fout.close();
+    return true;
+}
+
+bool loadAppliances(Appliance arr[], int &count) {
+    count = 0;
+    ifstream fin(APPLIANCES_FILE.c_str());
+    if (!fin.is_open()) return false;
+
+    string line;
+    while (getline(fin, line)) {
+        if (line.size() == 0) continue;
+
+        int p1 = (int)line.find('|');
+        if (p1 == -1) continue;
+        int p2 = (int)line.find('|', p1 + 1);
+        if (p2 == -1) continue;
+
+        string name = line.substr(0, p1);
+        string wattsStr = line.substr(p1 + 1, p2 - (p1 + 1));
+        string hoursStr = line.substr(p2 + 1);
+
+        double w = 0, h = 0;
+        stringstream sw(wattsStr); if (!(sw >> w)) continue;
+        stringstream sh(hoursStr); if (!(sh >> h)) continue;
+
+        if (name.size() > 0 && w > 0 && h >= 0 && h <= 24) {
+            if (count < MAX_APPLIANCES) {
+                arr[count].name = name;
+                arr[count].watts = w;
+                arr[count].hours = h;
+                count++;
+            }
+        }
+    }
+    fin.close();
+    return true;
+}
+
 void showMenu() {
     cout << "\n========== ELECTRICAL LOAD MONITOR ==========\n";
     cout << "1. Register appliance\n";
@@ -85,7 +134,6 @@ void registerAppliance(Appliance arr[], int &count) {
         cout << "Storage full.\n";
         return;
     }
-
     Appliance a;
     a.name  = readNonEmptyLine("Enter appliance name: ");
     a.watts = readPositiveDouble("Enter power rating (watts > 0): ");
@@ -93,10 +141,12 @@ void registerAppliance(Appliance arr[], int &count) {
 
     arr[count] = a;
     count++;
-    cout << "Appliance added.\n";
+
+    saveAppliances(arr, count);
+    cout << "Appliance registered and saved.\n";
 }
 
-void viewAppliances(Appliance arr[], int count) {
+void viewAppliances(const Appliance arr[], int count) {
     if (count == 0) {
         cout << "No appliances registered.\n";
         return;
@@ -120,7 +170,9 @@ int main() {
     Appliance appliances[MAX_APPLIANCES];
     int count = 0;
 
+    loadAppliances(appliances, count);
     cout << "Electrical Load Monitoring & Billing System\n";
+    cout << "Loaded appliances: " << count << "\n";
 
     while (true) {
         showMenu();
@@ -131,9 +183,15 @@ int main() {
             case 2: viewAppliances(appliances, count); break;
             case 3: cout << "Search appliance (coming soon)\n"; break;
             case 4: cout << "Billing (coming soon)\n"; break;
-            case 5: cout << "Save appliances (coming soon)\n"; break;
-            case 6: cout << "Goodbye!\n"; return 0;
-            default: cout << "Invalid choice. Try again.\n"; break;
+            case 5:
+                if (saveAppliances(appliances, count)) cout << "Saved.\n";
+                else cout << "Failed to save.\n";
+                break;
+            case 6:
+                saveAppliances(appliances, count);
+                cout << "Goodbye!\n";
+                return 0;
+            default: cout << "Invalid choice.\n"; break;
         }
     }
 }
