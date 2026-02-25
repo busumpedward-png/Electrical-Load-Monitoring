@@ -8,6 +8,7 @@ using namespace std;
 
 const int MAX_APPLIANCES = 100;
 const string APPLIANCES_FILE = "appliances.txt";
+const string BILLING_FILE    = "billing_summary.txt";
 
 struct Appliance {
     string name;
@@ -141,7 +142,7 @@ void showMenu() {
     cout << "1. Register appliance\n";
     cout << "2. View appliances + kWh\n";
     cout << "3. Search appliance\n";
-    cout << "4. Billing (tariff + total cost)\n";
+    cout << "4. Billing (and optional save)\n";
     cout << "5. Save appliances\n";
     cout << "6. Exit\n";
     cout << "===========================================\n";
@@ -218,6 +219,24 @@ void searchAppliance(const Appliance arr[], int count) {
     if (!found) cout << "No appliance found.\n";
 }
 
+void saveBillingSummary(double tariff, double totalEnergy, double cost, int count) {
+    ofstream fout(BILLING_FILE.c_str(), ios::app);
+    if (!fout.is_open()) {
+        cout << "Could not open billing_summary.txt\n";
+        return;
+    }
+
+    fout << "================ BILLING SUMMARY ================\n";
+    fout << fixed << setprecision(2);
+    fout << "Appliances count: " << count << "\n";
+    fout << "Tariff per kWh: " << tariff << "\n";
+    fout << "Total daily energy (kWh): " << totalEnergy << "\n";
+    fout << "Total daily cost: " << cost << "\n";
+    fout << "=================================================\n\n";
+
+    fout.close();
+}
+
 void billing(const Appliance arr[], int count) {
     if (count == 0) {
         cout << "No appliances registered. Register appliances first.\n";
@@ -225,16 +244,27 @@ void billing(const Appliance arr[], int count) {
     }
 
     double tariff = readPositiveDouble("Enter tariff per kWh (positive): ");
-
-    double total = totalKwh(arr, count);
-    double cost = total * tariff;
+    double totalEnergy = totalKwh(arr, count);
+    double cost = totalEnergy * tariff;
 
     cout << fixed << setprecision(2);
     cout << "\n========== BILLING SUMMARY ==========\n";
-    cout << "Tariff: " << tariff << " per kWh\n";
-    cout << "Total daily energy: " << total << " kWh\n";
+    cout << "Tariff per kWh: " << tariff << "\n";
+    cout << "Total daily energy: " << totalEnergy << " kWh\n";
     cout << "Total daily cost:  " << cost << "\n";
     cout << "=====================================\n";
+
+    cout << "Save billing summary to billing_summary.txt? (y/n): ";
+    char ch;
+    cin >> ch;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    if (ch == 'y' || ch == 'Y') {
+        saveBillingSummary(tariff, totalEnergy, cost, count);
+        cout << "Billing summary saved.\n";
+    } else {
+        cout << "Not saved.\n";
+    }
 }
 
 int main() {
